@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jharkhand Eco & Cultural Tourism</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Hover effect for places */
+    .place-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .place-info {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      opacity: 0;
+      transition: 0.3s ease-in-out;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+    }
+    .place-card:hover .place-info {
+      opacity: 1;
+    }
+    /* Chatbot floating button */
+    #chatbot-box {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 300px;
+      max-height: 400px;
+      display: none;
+      flex-direction: column;
+    }
+    #chat-toggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+    }
+    .logo{
+      height: 150px;
+      border-radius: 50%;
+    }
+    nav{
+      justify-content:space-between;
+    }
+  </style>
+  <style>
+    body { margin:0; font-family: 'Arial', sans-serif; background: #f0fdf4; }
+    /* ---------- Landing Section ---------- */
+    #landing {
+      height: 100vh;
+      background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e') no-repeat center center/cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      color: white;
+      text-align: center;
+      animation: fadeIn 2s ease;
+    }
+    #landing h1 { font-size: 3rem; margin-bottom: 20px; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); }
+    #landing p { font-size: 1.2rem; margin-bottom: 30px; text-shadow: 1px 1px 6px rgba(0,0,0,0.5); }
+    #start-btn { background: #10b981; padding: 12px 25px; font-size: 1rem; border:none; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+    #start-btn:hover { background: #059669; transform: scale(1.05); }
+    @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+
+    /* ---------- Trip Planner ---------- */
+    #form-section, #itinerary-section { max-width: 800px; margin: 50px auto; padding: 0 20px; }
+    .card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.3s; }
+    .card:hover { transform: translateY(-5px); }
+    .badge { background: #10b981; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; }
+    .btn { background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+    .btn:hover { background: #059669; }
+    input, select { padding: 8px; margin-top: 5px; width: 100%; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    h2 { color: #065f46; }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <!-- ✅ New Header with Logo + Hero + Navbar -->
+  <header class="bg-green-800 text-white shadow-md">
+    <div class="max-w-7xl mx-auto px-6 py-6">
+      <!-- Top row: Logo + Hero text -->
+      <div class="flex items-center space-x-6">
+        <img src="/logo.png" alt="BharatBot Logo" class="logo">
+        <span>
+          <h1 class="text-3xl font-bold">🌿 Jharkhand Eco & Cultural Tourism</h1>
+          <p class="text-lg">Explore Spirituality, Nature & Heritage</p>
+        </span>
+      </div>
+      <nav class="mt-6 flex space-x-6 text-lg font-medium">
+         <a href="#" class="hover:text-yellow-300">Home</a>
+         <a href="#places" class="hover:text-yellow-300">Places</a>
+         <a href="#map" class="hover:text-yellow-300">Map</a>
+         <a href="#feedback" class="hover:text-yellow-300">Feedback</a>
+         <a href="javascript:void(0)" onclick="toggleChatbot()" class="hover:text-yellow-300">Chatbot</a>
+     </nav>
+    </div>
+  </header>
+  <!-- ---------- Landing Section ---------- -->
+  <section id="landing">
+    <h1>Explore Jharkhand</h1>
+    <p>Discover waterfalls, adventures, culture & spirituality</p>
+    <button id="start-btn">Start Planning Your Trip</button>
+  </section>
+
+  <!-- ---------- Trip Planner Form ---------- -->
+  <section id="form-section" style="display:none;">
+    <h2>Plan Your Jharkhand Trip</h2>
+    <label>Days:
+      <input type="number" id="days" min="1" max="10">
+    </label>
+    <label>Interest:
+      <select id="interest">
+        <option value="waterfalls">Waterfalls</option>
+        <option value="adventure">Adventure</option>
+        <option value="relax">Relax</option>
+        <option value="cultural">Cultural</option>
+        <option value="spiritual">Spiritual</option>
+      </select>
+    </label>
+    <button class="btn" onclick="generateItinerary()">Generate Itinerary</button>
+  </section>
+
+  <!-- ---------- Generated Itinerary ---------- -->
+<section id="itinerary-section" style="display:none;">
+  <button class="btn mb-4" onclick="newPlan()">⬅ Back to Trip Planner</button>
+  <div id="itinerary-cards"></div>
+</section>
+<script>
+const itineraryTemplates = {
+  waterfalls: {icon:'🌊', theme:'Waterfalls & Nature', places:[
+    {name:'Hundru Falls', description:'Spectacular 98m waterfall, perfect for photography', icon:'📸', time:'9:00 AM - 12:00 PM'},
+    {name:'Jonha Falls', description:'Hidden gem with pristine natural pools', icon:'🏊', time:'2:00 PM - 5:00 PM'},
+    {name:'Dassam Falls', description:'Multi-tiered cascade surrounded by dense forest', icon:'🌲', time:'10:00 AM - 1:00 PM'},
+    {name:'Hirni Falls', description:'Serene waterfall ideal for meditation', icon:'🧘', time:'3:00 PM - 6:00 PM'}
+  ]},
+  adventure: {icon:'⛰', theme:'Adventure & Trekking', places:[
+    {name:'Parasnath Hill Trek', description:'Highest peak in Jharkhand, challenging trail', icon:'🥾', time:'6:00 AM - 4:00 PM'},
+    {name:'Rock Climbing at Netarhat', description:'Natural rock formations perfect for climbing', icon:'🧗', time:'8:00 AM - 12:00 PM'},
+    {name:'River Rafting - Subarnarekha', description:'Thrilling white water rafting experience', icon:'🚣', time:'10:00 AM - 3:00 PM'},
+    {name:'Dalma Wildlife Trek', description:'Wildlife spotting and jungle trekking', icon:'🐘', time:'7:00 AM - 2:00 PM'}
+  ]},
+  relax: {icon:'🧘', theme:'Relax & Wellness', places:[
+    {name:'Netarhat Sunset Point', description:'Peaceful hill station with stunning sunsets', icon:'🌅', time:'5:00 PM - 7:00 PM'},
+    {name:'Betla National Park', description:'Gentle safari and nature walks', icon:'🦋', time:'9:00 AM - 2:00 PM'},
+    {name:'Ranchi Lake', description:'Boating and lakeside relaxation', icon:'🛶', time:'4:00 PM - 7:00 PM'},
+    {name:'Tata Steel Zoological Park', description:'Leisurely zoo visit and gardens', icon:'🦒', time:'10:00 AM - 4:00 PM'}
+  ]},
+  cultural: {icon:'🏛', theme:'Cultural Heritage', places:[
+    {name:'Jagannath Temple, Ranchi', description:'Historic temple with beautiful architecture', icon:'🛕', time:'8:00 AM - 11:00 AM'},
+    {name:'Tribal Research Institute', description:'Learn about indigenous culture and art', icon:'🎨', time:'2:00 PM - 5:00 PM'},
+    {name:'Deori Temple', description:'Ancient Tantric temple with rich history', icon:'📿', time:'9:00 AM - 12:00 PM'},
+    {name:'Birsa Munda Museum', description:'Museum dedicated to tribal freedom fighter', icon:'🏛', time:'10:00 AM - 4:00 PM'}
+  ]},
+  spiritual: {icon:'🛕', theme:'Spiritual Journey', places:[
+    {name:'Shikharji (Parasnath)', description:'Sacred Jain pilgrimage site', icon:'🙏', time:'5:00 AM - 6:00 PM'},
+    {name:'Baidyanath Temple, Deoghar', description:'One of the 12 Jyotirlingas', icon:'🕉', time:'4:00 AM - 8:00 AM'},
+    {name:'Rajrappa Temple', description:'Temple at confluence of rivers', icon:'🌊', time:'6:00 AM - 10:00 AM'},
+    {name:'Dewri Temple', description:'Ancient temple with spiritual significance', icon:'🔔', time:'7:00 AM - 11:00 AM'}
+  ]}
+};
+
+document.getElementById('start-btn').onclick = () => {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('form-section').style.display = 'block';
+};
+
+function generateItinerary() {
+  const days = parseInt(document.getElementById('days').value);
+  const interest = document.getElementById('interest').value;
+  if (!days || days < 1) { alert('Enter valid number of days'); return; }
+  const template = itineraryTemplates[interest];
+  const selectedPlaces = template.places.slice(0, days);
+  const cardsDiv = document.getElementById('itinerary-cards');
+  cardsDiv.innerHTML = '';
+  selectedPlaces.forEach((place,index)=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<div class="badge">Day ${index+1}</div>
+      <h3>${place.icon} ${place.name}</h3>
+      <p>${place.description}</p>
+      <p>Time: ${place.time}</p>
+      <p>Location: Jharkhand</p>
+      <button class="btn">Photos</button>
+      <button class="btn">Nearby Food</button>`;
+    cardsDiv.appendChild(card);
+  });
+  document.getElementById('form-section').style.display='none';
+  document.getElementById('itinerary-section').style.display='block';
+}
+function newPlan(){
+  // Show the landing page again
+  document.getElementById('landing').style.display = 'block';
+  
+  // Hide the form and itinerary sections
+  document.getElementById('form-section').style.display = 'none';
+  document.getElementById('itinerary-section').style.display = 'none';
+  
+  // Reset form inputs
+  document.getElementById('days').value = '';
+  document.getElementById('interest').value = 'waterfalls';
+  
+  // Clear previous itinerary cards
+  document.getElementById('itinerary-cards').innerHTML = '';
+}
+
+</script>
+  <!-- Places Section -->
+  <section class="py-10 px-6" id="places">
+    <h2 class="text-3xl font-bold text-center mb-8">🌍 Explore Places</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+
+      <!-- 12 Places -->
+      <div class="place-card rounded-2xl shadow-lg" onclick="openModal('Deoghar')">
+        <img src="/deoghar.png" class="w-full h-56 object-cover">
+        <div class="place-info">
+          <h3 class="text-xl font-semibold">Deoghar</h3>
+          <p>Land of Baba Baidyanath Jyotirlinga, blend of spirituality & culture.</p>
+        </div>
+      </div>
+
+      <div class="place-card rounded-2xl shadow-lg" onclick="openModal('Patratu Valley')">
+        <img src="/paratu valley.jpg" class="w-full h-56 object-cover">
+        <div class="place-info">
+          <h3 class="text-xl font-semibold">Patratu Valley</h3>
+          <p>Hidden gem with lush green landscapes, perfect sunrise & sunset views.</p>
+        </div>
+      </div>
+
+      <div class="place-card rounded-2xl shadow-lg" onclick="openModal('Parasnath Valley')">
+        <img src="/parasnath-hills.jpg" class="w-full h-56 object-cover">
+        <div class="place-info">
+          <h3 class="text-xl font-semibold">Parasnath Valley</h3>
+          <p>Home to Parasnath Hills – sacred Jain pilgrimage & trekking spot.</p>
+        </div>
+      </div>
+
+      <div class="place-card rounded-2xl shadow-lg" onclick="openModal('Hundru Waterfall')">
+        <img src="/Rejuvenating_Bath_at_the_Natural_Pool_in_Hundru_Waterfall_1985307590.webp" class="w-full h-56 object-cover">
+        <div class="place-info">
+          <h3 class="text-xl font-semibold">Hundru Waterfall</h3>
+          <p>One of the highest waterfalls in Jharkhand, a monsoon wonder.</p>
+        </div>
+      </div>
+
+      <div class="place-card rounded-2xl shadow-lg" onclick="openModal('Betla National Park')">
+        <img src="/betla-national-park.jpg" class="w-full h-56 object-cover">
+        <div class="place-info">
+          <h3 class="text-xl font-semibold">Betla National Park</h3>
+          <p>First tiger reserve of India, rich in wildlife & forest safaris.</p>
+        </div>
+      </div>
+
+      <div class="place-card rounded-2xl shadow-lg" onclick="openModal('Ranchi')">
+        <img src="/Jagannath_temple_Ranchi.jpg" class="w-full h-56 object-cover">
+        <div class="place-info">
+          <h3 class="text-xl font-semibold">Ranchi</h3>
+          <p>Capital city, known as 'City of Waterfalls' & cultural hub.</p>
+        </div>
+      </div>
+
+      <div class="place-card rounded-2xl shadow-lg" onclick="openModal('Jamshedpur')">
+        <img src="/jamshedpur.jpg" class="w-full h-56 object-cover">
+        <div class="place-info">
+          <h3 class="text-xl font-semibold">Jamshedpur</h3>
+          <p>Steel City of India, blend of industry & greenery.</p>
+        </div>
+      </div>
+
+      <div class="place-card rounded-2xl shadow-lg" onclick="openModal('Maithon Dam')">
+        <img src="/maithon dam.jpg" class="w-full h-56 object-cover">
+        <div class="place-info">
+          <h3 class="text-xl font-semibold">Maithon Dam</h3>
+          <p>Kashmir of Koyalanchal – boating, islands & scenic sunsets.</p>
+        </div>
+      </div>
+
+      <div class="place-card rounded-2xl shadow-lg" onclick="openModal('Baba Baidyanath Mandir')">
+        <img src="/Baidyanathdham-deoghar.jpg" class="w-full h-56 object-cover">
+        <div class="place-info">
+          <h3 class="text-xl font-semibold">Baba Baidyanath Mandir</h3>
+          <p>One of the 12 Jyotirlingas, major Shiva pilgrimage site.</p>
+        </div>
+      </div>
+
+      <div class="place-card rounded-2xl shadow-lg" onclick="openModal('Netarhat')">
+        <img src="/netarhat.jpg" class="w-full h-56 object-cover">
+        <div class="place-info">
+          <h3 class="text-xl font-semibold">Netarhat</h3>
+          <p>Queen of Chotanagpur – famous for sunrise & sunset points.</p>
+        </div>
+      </div>
+
+      <div class="place-card rounded-2xl shadow-lg" onclick="openModal('Sammed Shikhar')">
+        <img src="/sammed shikhar.avif" class="w-full h-56 object-cover">
+        <div class="place-info">
+          <h3 class="text-xl font-semibold">Sammed Shikhar</h3>
+          <p>Holistic Jain pilgrimage site, trekking + spirituality together.</p>
+        </div>
+      </div>
+
+      <div class="place-card rounded-2xl shadow-lg" onclick="openModal('Hazaribagh')">
+        <img src="/hazirabagh.webp" class="w-full h-56 object-cover">
+        <div class="place-info">
+          <h3 class="text-xl font-semibold">Hazaribagh</h3>
+          <p>Known for National Park, tribal art & green valleys.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Map Section -->
+  <section class="py-10" id="map">
+    <h2 class="text-3xl font-bold text-center mb-5">🗺️ Jharkhand Map</h2>
+    <div class="flex justify-center">
+      <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3672056.3565832423!2d83.19937828000268!3d23.45598032464986!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x398b2fdc195f5c1d%3A0x3d26d0b9ef11a64a!2sJharkhand!5e0!3m2!1sen!2sin!4v1693983423331" 
+        width="80%" height="400" style="border:0;" allowfullscreen loading="lazy"></iframe>
+    </div>
+  </section>
+
+  <!-- Feedback Section -->
+  <section class="py-10 bg-gray-200" id="feedback">
+  <h2 class="text-3xl font-bold text-center mb-8">💬 Share Your Experience</h2>
+  <div class="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
+
+    <form id="feedbackForm" class="space-y-6">
+      
+      <!-- File Upload -->
+      <label class="block text-lg font-semibold mb-2">Upload Photo/Video</label>
+      <div class="border-2 border-dashed border-gray-400 rounded-lg p-6 text-center hover:border-green-700 transition cursor-pointer">
+        <input type="file" id="fileInput" class="hidden">
+        <p id="fileLabel" class="text-gray-600">Click to select a file or drag it here</p>
+      </div>
+
+      <!-- Review -->
+      <label class="block text-lg font-semibold mb-2">Your Review</label>
+      <textarea id="reviewInput" rows="4" class="w-full border rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Write your travel experience..."></textarea>
+
+      <!-- Submit -->
+      <button type="submit" class="bg-green-700 text-white px-6 py-3 rounded-lg w-full hover:bg-green-900 transition">Submit Feedback</button>
+
+    </form>
+  </div>
+</section>
+
+  <!-- Floating Chatbot -->
+ <div id="chatbot-box" class="fixed bottom-20 right-5 bg-white rounded-2xl shadow-xl p-4 w-80 max-h-96 hidden flex-col transition-all duration-500 transform translate-y-10 opacity-0">
+  <div class="flex justify-between items-center mb-2">
+    <h3 class="font-semibold text-green-700">Chatbot</h3>
+    <button onclick="toggleChatbot()" class="text-gray-500 hover:text-red-500 font-bold text-lg">&times;</button>
+  </div>
+  <div id="chatbox" class="border p-2 mb-2 h-48 overflow-y-auto text-sm"></div>
+  <div class="flex">
+    <input type="text" id="userInput" class="border rounded p-2 flex-grow" placeholder="Ask about Jharkhand...">
+    <button onclick="sendMessage()" class="bg-green-700 text-white px-4 py-2 rounded-lg ml-2">Send</button>
+  </div>
+</div>
+
+<button id="chat-toggle" class="bg-green-700 text-white px-4 py-3 rounded-full shadow-lg">💬</button>
+
+  <!-- Modal -->
+  <div id="placeModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50">
+    <div class="bg-white w-11/12 md:w-3/4 lg:w-2/3 rounded-xl shadow-lg p-6 grid md:grid-cols-2 gap-6 overflow-y-auto max-h-[80vh] relative">
+      <div>
+        <h2 id="modalTitle" class="text-2xl font-bold mb-3"></h2>
+        <h3 class="text-lg font-semibold text-green-700">🌟 Speciality</h3>
+        <p id="modalSpeciality" class="mb-4 text-gray-700"></p>
+
+        <h3 class="text-lg font-semibold text-green-700">🚗 Transportation</h3>
+        <p id="modalTransport" class="mb-4 text-gray-700"></p>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold text-green-700">🏞️ Tourist Attractions</h3>
+        <p id="modalAttractions" class="mb-4 text-gray-700"></p>
+
+        <h3 class="text-lg font-semibold text-green-700">🏨 Hotels & Restaurants</h3>
+        <p id="modalHotels" class="mb-4 text-gray-700"></p>
+      </div>
+      <button onclick="closeModal()" class="absolute top-3 right-3 bg-red-600 text-white px-3 py-1 rounded-lg">✖</button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-green-900 text-white text-center py-5 mt-10">
+    <p>© 2025 Jharkhand Tourism | Designed for SIH Hackathon</p>
+  </footer>
+  <script>
+    const chatbox = document.getElementById("chatbox");
+    const chatbotBox = document.getElementById("chatbot-box");
+
+    function toggleChatbot() {
+      if (chatbotBox.classList.contains("opacity-0")) {
+        chatbotBox.style.display = "flex";
+        setTimeout(() => {
+          chatbotBox.classList.remove("opacity-0", "translate-y-10");
+          chatbotBox.classList.add("opacity-100", "translate-y-0");
+        }, 50);
+      } else {
+        chatbotBox.classList.remove("opacity-100", "translate-y-0");
+        chatbotBox.classList.add("opacity-0", "translate-y-10");
+        setTimeout(() => {
+          chatbotBox.style.display = "none";
+        }, 500);
+      }
+    }
+    function sendMessage() {
+      let input = document.getElementById("userInput").value;
+      if (input.trim() === "") return;
+      chatbox.innerHTML += `<p><b>You:</b> ${input}</p>`;
+      document.getElementById("userInput").value = "";
+
+      // Default reply
+      let response = "Sorry, I don’t know that.";
+
+      if (input.toLowerCase().includes("waterfall")) 
+        response = "Jharkhand has Hundru, Dassam & Jonha Falls near Ranchi.";
+      else if (input.toLowerCase().includes("good morning")) 
+        response = "Good morning 🌞 Have a refreshing day! Jharkhand’s hills and valleys look magical in the morning.";
+      else if (input.toLowerCase().includes("good evening")) 
+        response = "Good evening 🌆 The sunset at Netarhat is one of the best experiences in Jharkhand!";
+      else if (input.toLowerCase().includes("good night")) 
+        response = "Good night 🌙 Sweet dreams! Come back tomorrow to explore more about Jharkhand Tourism.";
+      else if (input.toLowerCase().includes("goodbye")) 
+        response = "Goodbye 👋 Have a safe journey and keep Jharkhand in your travel list!";
+      else if (input.toLowerCase().includes("ranchi")) 
+        response = "Ranchi is the capital city, known for Tagore Hill, Rock Garden, Ranchi Lake & nearby waterfalls.";
+      else if (input.toLowerCase().includes("netarhat")) 
+        response = "Netarhat is called the Queen of Chotanagpur 🌄, famous for sunrise and sunset points.";
+      else if (input.toLowerCase().includes("hazaribagh")) 
+        response = "Hazaribagh offers a Wildlife Sanctuary, Canary Hill, and scenic views of the Damodar Valley.";
+      else if (input.toLowerCase().includes("jamshedpur")) 
+        response = "Jamshedpur, the steel city, has Dimna Lake, Jubilee Park, and Tata Steel Zoological Park.";
+      else if (input.toLowerCase().includes("deoghar")) 
+        response = "Deoghar is a holy city 🙏 famous for Baba Baidyanath Temple and sweets like Peda.";
+      else if (input.toLowerCase().includes("patratu")) 
+        response = "Patratu Valley is a beautiful place with winding roads, lake views, and green hills.";
+      else if (input.toLowerCase().includes("chhau")) 
+        response = "Chhau is a tribal martial dance form from Jharkhand, often performed with masks and drums.";
+      else if (input.toLowerCase().includes("sarhul")) 
+        response = "Sarhul is a spring festival 🌸 celebrated by tribal communities to honor nature and Sal trees.";
+      else if (input.toLowerCase().includes("karma")) 
+        response = "Karma festival is a harvest festival 🌾 where people sing and dance around the Karma tree.";
+      else if (input.toLowerCase().includes("shopping")) 
+        response = "Jharkhand is famous for Bamboo crafts, Dokra art, stone carvings, and tribal jewelry.";
+      else if (input.toLowerCase().includes("weather")) 
+        response = "Jharkhand has hot summers, rainy monsoons, and cool winters ❄️. Best months: Oct–March.";
+      else if (input.toLowerCase().includes("wild animals")) 
+        response = "You can spot elephants, tigers, leopards, and deer in Betla & Hazaribagh National Parks 🐅.";
+      else if (input.toLowerCase().includes("transport")) 
+        response = "Jharkhand is connected by flights (Ranchi, Deoghar), trains (Ranchi, Dhanbad, Tatanagar) & highways.";
+      else if (input.toLowerCase().includes("people")) 
+        response = "People of Jharkhand are warm and welcoming, belonging to diverse tribes like Munda, Santhal & Oraon.";
+      else if (input.toLowerCase().includes("museum")) 
+        response = "Ranchi Museum & Tribal Research Institute Museum showcase Jharkhand’s culture & history.";
+      else if (input.toLowerCase().includes("college") || input.toLowerCase().includes("education")) 
+        response = "Jharkhand has top institutes like IIM Ranchi, BIT Mesra, and NIT Jamshedpur.";
+      else if (input.toLowerCase().includes("sports")) 
+        response = "Jharkhand is the home of cricket legend M. S. Dhoni 🏏 and has a strong hockey culture.";
+      else if (input.toLowerCase().includes("airport ranchi")) 
+        response = "Birsa Munda Airport ✈️ connects Ranchi to Delhi, Kolkata, Mumbai, Bangalore & more.";
+      else if (input.toLowerCase().includes("monument")) 
+        response = "Jharkhand has monuments like Maluti Temples, Jagannath Temple Ranchi & Palamu Fort.";
+      else if (input.toLowerCase().includes("thank you")) 
+        response = "You’re always welcome 🙏 Enjoy exploring the land of forests and waterfalls!";
+      else if (input.toLowerCase().includes("capital")) 
+        response = "The capital of Jharkhand is Ranchi.";
+      else if (input.toLowerCase().includes("best time")) 
+        response = "Best time to visit Jharkhand is October to March.";
+      else if (input.toLowerCase().includes("wildlife")) 
+        response = "Visit Betla National Park & Hazaribagh National Park for safaris.";
+      else if (input.toLowerCase().includes("hotel") || input.toLowerCase().includes("stay")) 
+        response = "Luxury stays: Radisson Blu Ranchi, Sonnet Jamshedpur, resorts near Netarhat. Budget stays: lodges & guest houses across all major towns.";
+      else if (input.toLowerCase().includes("train") || input.toLowerCase().includes("rail")) 
+        response = "Major stations: Ranchi Junction, Jasidih (Deoghar), Tatanagar (Jamshedpur), Parasnath (Giridih).";
+      else if (input.toLowerCase().includes("airport") || input.toLowerCase().includes("flight")) 
+        response = "Airports: Birsa Munda (Ranchi), Deoghar Airport, Dhanbad & Jamshedpur (domestic).";
+      else if (input.toLowerCase().includes("road") || input.toLowerCase().includes("bus")) 
+        response = "Jharkhand is well connected by NH-20, NH-33, and state buses from Ranchi, Patna, Kolkata.";
+      else if (input.toLowerCase().includes("festival")) 
+        response = "Famous festivals: Sarhul, Karma, Sohrai, and Rath Yatra of Jagannath Temple Ranchi.";
+      else if (input.toLowerCase().includes("food")) 
+        response = "Try litti-chokha, dhuska, pitha, tribal handia rice beer, and peda of Deoghar.";
+      else if (input.toLowerCase().includes("language")) 
+        response = "Languages spoken: Hindi, Nagpuri, Kurukh, Mundari, Santhali, Khortha.";
+      else if (input.toLowerCase().includes("tribal")) 
+        response = "Jharkhand is home to Santhal, Munda, Oraon tribes, rich in folk dance, music & paintings.";
+      else if (input.toLowerCase().includes("hello") || input.toLowerCase().includes("hi")) 
+        response = "Hello 👋, welcome to Jharkhand Tourism! How can I help you?";
+      else if (input.toLowerCase().includes("hey") || input.toLowerCase().includes("heyy")) 
+        response = "Hello 👋, welcome to Jharkhand Tourism! How can I help you?";
+      else if (input.toLowerCase().includes("thanks") || input.toLowerCase().includes("thank you")) 
+        response = "You're welcome! Wishing you a happy trip to Jharkhand.";
+      else if (input.toLowerCase().includes("bye") || input.toLowerCase().includes("byy")) 
+        response = "Byee byee, See you soon, Thankyou for visiting";
+      else if (input.toLowerCase().includes("help")) 
+        response = "You can ask me about places, waterfalls, hotels, transport, food, festivals, or culture of Jharkhand.";
+      chatbox.innerHTML += `<p class="text-green-700"><b>Bot:</b> ${response}</p>`;
+      chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    // Modal Data
+    const placesData = {
+      "Deoghar": {
+        speciality: "Land of Baba Baidyanath Jyotirlinga – spirituality & culture.",
+        transport: "Air: Deoghar Airport | Rail: Jasidih Jn. | Road: NH-333.",
+        attractions: "Baidyanath Temple, Trikut Hills, Naulakha Temple, Tapovan.",
+        hotels: "Amrapali Clarks Inn, Hotel Imperial Heights, Dharamshalas near temple."
+      },
+      "Patratu Valley": {
+        speciality: "Hidden gem with green landscapes & peaceful vibe.",
+        transport: "Nearest: Ranchi Airport & Ranchi Jn. railway station.",
+        attractions: "Patratu Lake, Dam, Valley View Point, Eco-Resorts.",
+        hotels: "Patratu Valley Resort, Hotels in Ranchi (45 min drive)."
+      },
+      "Parasnath Valley": {
+        speciality: "Sacred Jain pilgrimage + trekking spot.",
+        transport: "Nearest station: Parasnath (Isri Bazar).",
+        attractions: "Shikharji, Madhuban, Jain Temples, Hill Trek.",
+        hotels: "Yatri Nivas, Jain Dharamshalas, Hotels in Giridih."
+      },
+      "Hundru Waterfall": {
+        speciality: "Highest waterfall in Jharkhand.",
+        transport: "Nearest: Ranchi Airport (40 km), Ranchi Jn. railway station.",
+        attractions: "Hundru Falls, Jonha Falls, Dassam Falls nearby.",
+        hotels: "Resorts in Ranchi, Govt. guest houses near falls."
+      },
+      "Betla National Park": {
+        speciality: "First tiger reserve of India.",
+        transport: "Nearest: Daltonganj Railway, Ranchi Airport (170 km).",
+        attractions: "Wildlife safari, Palamu Fort, Elephant rides.",
+        hotels: "Forest Rest Houses, Betla National Park resorts."
+      },
+      "Ranchi": {
+        speciality: "City of waterfalls & culture.",
+        transport: "Ranchi Airport & Ranchi Junction.",
+        attractions: "Dassam Falls, Rock Garden, Jagannath Temple.",
+        hotels: "Radisson Blu, Capitol Hill, Budget hotels."
+      },
+      "Jamshedpur": {
+        speciality: "Steel City + greenery.",
+        transport: "Tatanagar Railway & Sonari Airport.",
+        attractions: "Jubilee Park, Dimna Lake, Tata Steel Zoological Park.",
+        hotels: "The Sonnet, Ginger Hotel, Resorts nearby."
+      },
+      "Maithon Dam": {
+        speciality: "Kashmir of Koyalanchal.",
+        transport: "Nearest: Dhanbad & Asansol railway stations.",
+        attractions: "Maithon Dam, boating, Kalyaneshwari Temple.",
+        hotels: "Maithon Resort, Hotels in Dhanbad/Asansol."
+      },
+      "Baba Baidyanath Mandir": {
+        speciality: "One of 12 Jyotirlingas.",
+        transport: "Jasidih Jn. & Deoghar Airport.",
+        attractions: "Baidyanath Temple, Shivganga, Basukinath.",
+        hotels: "Hotels & Dharamshalas near Mandir."
+      },
+      "Netarhat": {
+        speciality: "Queen of Chotanagpur.",
+        transport: "Nearest: Ranchi Airport (156 km), Lohardaga rail.",
+        attractions: "Sunrise & Sunset Point, Koel View, Netarhat Dam.",
+        hotels: "Netarhat Tourist Lodge, Forest Guest Houses."
+      },
+      "Sammed Shikhar": {
+        speciality: "Holistic Jain pilgrimage.",
+        transport: "Nearest station: Parasnath (Isri Bazar).",
+        attractions: "Shikharji Hill Temples, Madhuban, Trekking.",
+        hotels: "Dharamshalas & Hotels in Madhuban/Giridih."
+      },
+      "Hazaribagh": {
+        speciality: "National Park & tribal art.",
+        transport: "Koderma Railway (50 km), Ranchi Airport (90 km).",
+        attractions: "Hazaribagh Lake, National Park, Canary Hill.",
+        hotels: "Hotel Canary Inn, Tourist Bungalows."
+      }
+    };
+
+    function openModal(place) {
+      const data = placesData[place];
+      document.getElementById("modalTitle").innerText = place;
+      document.getElementById("modalSpeciality").innerText = data.speciality;
+      document.getElementById("modalTransport").innerText = data.transport;
+      document.getElementById("modalAttractions").innerText = data.attractions;
+      document.getElementById("modalHotels").innerText = data.hotels;
+      document.getElementById("placeModal").classList.remove("hidden");
+      document.getElementById("placeModal").classList.add("flex");
+    }
+
+    function closeModal() {
+      document.getElementById("placeModal").classList.add("hidden");
+      document.getElementById("placeModal").classList.remove("flex");
+    }
+  </script>
+  <script type="module">
+  // Firebase App and Firestore imports
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCbsL4GVRvn5HqrFFfr0aL6Kev-rKIuMSk",
+  authDomain: "jharkhand-tourism-3d52e.firebaseapp.com",
+  projectId: "jharkhand-tourism-3d52e",
+  storageBucket: "jharkhand-tourism-3d52e.appspot.com",
+  messagingSenderId: "859837506852",
+  appId: "1:859837506852:web:f8373854106981d626bfb1"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Feedback form handling
+const feedbackForm = document.getElementById("feedbackForm");
+const fileInput = document.getElementById("fileInput");
+const fileLabel = document.getElementById("fileLabel");
+const reviewInput = document.getElementById("reviewInput");
+
+// Show file name when selected
+fileLabel.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", () => {
+  if (fileInput.files.length > 0) {
+    fileLabel.textContent = fileInput.files[0].name;
+  } else {
+    fileLabel.textContent = "Click to select a file or drag it here";
+  }
+});
+
+feedbackForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const review = reviewInput.value.trim();
+  const file = fileInput.files[0];
+
+  if (!review && !file) { 
+    alert("Add a review or upload a file!"); 
+    return; 
+  }
+
+  let uploadedFileURL = "";
+
+  // Upload file to Cloudinary
+  if (file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "feedback_photo"); // replace with your preset
+
+    try {
+      const res = await fetch("https://api.cloudinary.com/v1_1/dqqstazhn/upload", { // replace with your cloud name
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      uploadedFileURL = data.secure_url;
+    } catch (err) {
+      alert("File upload failed!");
+      console.error(err);
+      return;
+    }
+  }
+
+  // Save review + file URL to Firebase
+  try {
+    await addDoc(collection(db, "feedback"), {
+      review: review,
+      fileURL: uploadedFileURL,
+      timestamp: serverTimestamp()
+    });
+    alert("Feedback submitted successfully!");
+    feedbackForm.reset();
+    fileLabel.textContent = "Click to select a file or drag it here";
+  } catch (error) {
+    console.error("Error submitting feedback:", error);
+    alert("Failed to submit feedback!");
+  }
+});
+</script>
+</body>
+</html>
